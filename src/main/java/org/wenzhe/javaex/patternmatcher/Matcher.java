@@ -15,7 +15,7 @@ import java.util.function.Predicate;
  */
 public class Matcher<T, R> {
   
-  private T obj;
+  private final T obj;
   private R result;
   private boolean matched = false;
 
