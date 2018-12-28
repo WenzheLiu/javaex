@@ -33,15 +33,16 @@ public class Success<T> extends Try<T> {
   }
 
   @Override
-  public void foreach(Consumer<T> f) {
+  public Try<T> foreach(Consumer<T> f) {
     f.accept(value);
+    return this;
   }
 
   @Override
   public <U> Try<U> flatMap(Function<T, Try<U>> f) {
     try {
       return f.apply(value);
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
       return new Failure<>(e);
     }
   }
@@ -59,33 +60,39 @@ public class Success<T> extends Try<T> {
       } else {
         return new Failure<>(new NoSuchElementException("Predicate does not hold for " + value));
       }
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
       return new Failure<>(e);
     }
   }
 
   @Override
-  public Try<T> recoverWith(Function<RuntimeException, Try<T>> f) {
+  public Try<T> recoverWith(Function<Exception, Try<T>> f) {
     return this;
   }
 
   @Override
-  public Try<T> recover(Function<RuntimeException, T> f) {
+  public Try<T> recover(Function<Exception, T> f) {
     return this;
   }
 
   @Override
-  public Try<RuntimeException> failed() {
+  public Try<Exception> failed() {
     return new Failure<>(new UnsupportedOperationException("Success.failed"));
   }
 
   @Override
-  public <U> Try<U> transform(Function<T, Try<U>> s, Function<RuntimeException, Try<U>> f) {
+  public <U> Try<U> transform(Function<T, Try<U>> s, Function<Exception, Try<U>> f) {
     try {
-      return s.apply(((Success<T>) this).get());
+      return s.apply(this.get());
     } catch (RuntimeException e) {
       return new Failure<>(e);
     }
+  }
+
+  @Override
+  public Try<T> onException(Consumer<Exception> f) {
+    // do nothing
+    return this;
   }
 
 }

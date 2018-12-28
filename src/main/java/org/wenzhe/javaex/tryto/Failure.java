@@ -10,9 +10,9 @@ import java.util.function.Predicate;
  */
 public class Failure<T> extends Try<T> {
   
-  private final RuntimeException exception;
+  private final Exception exception;
 
-  Failure(RuntimeException e) {
+  Failure(Exception e) {
     exception = e;
   }
 
@@ -28,12 +28,13 @@ public class Failure<T> extends Try<T> {
 
   @Override
   public T get() {
-    throw exception;
+    throw new RuntimeException(exception.getMessage(), exception);
   }
 
   @Override
-  public void foreach(Consumer<T> f) {
+  public Try<T> foreach(Consumer<T> f) {
     // do nothing
+    return this;
   }
 
   @SuppressWarnings("unchecked")
@@ -54,16 +55,16 @@ public class Failure<T> extends Try<T> {
   }
 
   @Override
-  public Try<T> recoverWith(Function<RuntimeException, Try<T>> f) {
+  public Try<T> recoverWith(Function<Exception, Try<T>> f) {
     try {
       return f.apply(exception);
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
       return new Failure<>(e);
     }
   }
 
   @Override
-  public Try<T> recover(Function<RuntimeException, T> f) {
+  public Try<T> recover(Function<Exception, T> f) {
     try {
       return Try.to(() -> f.apply(exception));
     } catch (RuntimeException e) {
@@ -72,17 +73,23 @@ public class Failure<T> extends Try<T> {
   }
 
   @Override
-  public Try<RuntimeException> failed() {
+  public Try<Exception> failed() {
     return new Success<>(exception);
   }
 
   @Override
-  public <U> Try<U> transform(Function<T, Try<U>> s, Function<RuntimeException, Try<U>> f) {
+  public <U> Try<U> transform(Function<T, Try<U>> s, Function<Exception, Try<U>> f) {
     try {
       return f.apply(exception);
     } catch (RuntimeException e) {
       return new Failure<>(e);
     }
+  }
+
+  @Override
+  public Try<T> onException(Consumer<Exception> f) {
+    f.accept(exception);
+    return this;
   }
 
 }
